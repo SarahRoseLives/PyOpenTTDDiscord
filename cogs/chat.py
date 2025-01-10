@@ -23,13 +23,15 @@ class ChatCog(commands.Cog):
         # Get the channel ID from the config file
         self.channel_id = int(config.get("BOT", "chat_channel_id"))
 
-        # Set the IP address and port number for connection
-        ip_address = "127.0.0.1"
-        port_number = 3977
+        self.ip_address = config.get("OPENTTD", "ip_address")
+        self.port_number = int(config.get("OPENTTD", "port_number"))
+        self.password = config.get("OPENTTD", "password")
+
+
 
         # Create an admin instance to communicate with OpenTTD
-        self.admin = Admin(ip=ip_address, port=port_number)
-        self.admin.login("pyOpenTTDAdmin", "toor")
+        self.admin = Admin(ip=self.ip_address, port=self.port_number)
+        self.admin.login("pyOpenTTDAdmin", self.password)
 
         # Start the thread to handle OpenTTD console messages
         self.admin_thread = threading.Thread(target=self.run_openttd_admin, daemon=True)
@@ -51,7 +53,7 @@ class ChatCog(commands.Cog):
                 if channel is not None:
                     asyncio.run_coroutine_threadsafe(channel.send(cleaned_message), self.bot.loop)
 
-            # Forward messages starting with "***" (events)
+            # Forward messages for join / leave of players (events)
             elif "the game" in message:
                 embed = discord.Embed(
                     description=message.strip(),

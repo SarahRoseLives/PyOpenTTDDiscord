@@ -7,7 +7,8 @@ import configparser
 import os
 import re
 
-class WelcomeCog(commands.Cog):
+
+class RconCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -27,8 +28,6 @@ class WelcomeCog(commands.Cog):
         self.port_number = int(config.get("OPENTTD", "port_number"))
         self.password = config.get("OPENTTD", "password")
 
-
-
         # Create an admin instance to communicate with OpenTTD
         self.admin = Admin(ip=self.ip_address, port=self.port_number)
         self.admin.login("pyOpenTTDAdmin", self.password)
@@ -37,30 +36,38 @@ class WelcomeCog(commands.Cog):
         self.admin_thread = threading.Thread(target=self.run_openttd_admin, daemon=True)
         self.admin_thread.start()
 
+        # To store all RCON responses
+        self.rcon_responses = []
+
     def run_openttd_admin(self):
         # Subscribe to receive console updates
-        self.admin.subscribe(AdminUpdateType.CONSOLE)
-
-        # Filter and forward console packets
-        @self.admin.add_handler(openttdpacket.ConsolePacket)
-        def console_packet(admin: Admin, packet: openttdpacket.ConsolePacket):
-            message = packet.message
-
-            # Listen for new clients and send them a private message on join
-            if '[server] Client' in packet.message:
-                if 'joined' in packet.message:
-                    # print(packet.message)
-
-                    match = re.search(r"Client #(\d+)", packet.message)
-
-                    if match:
-                        client_id = match.group(1)
-                        # print(client_id)
-                        admin.send_private(self.welcome_message, int(client_id))
+        @self.admin.add_handler(openttdpacket.RconPacket)
+        def RconPacket(admin: Admin, packet: openttdpacket.RconPacket):
+            # Append each RconPacket's message to the list
+            self.rcon_responses.append(str(packet))  # Or use specific attributes like packet.data if needed
 
         # Run admin to keep connection active
         self.admin.run()
 
+    @commands.command()
+    async def rcon(self, ctx, *, command: str):
+        """Send an RCON command to OpenTTD and respond with the output."""
+        # Clear the previous responses before sending a new command
+        self.rcon_responses.clear()
+
+        # Send the RCON command to OpenTTD
+        self.admin.send_rcon(command)
+
+        # Wait for the response (you may need to adjust the sleep duration for your use case)
+        await asyncio.sleep(2)  # Increase this if you expect multiple packets and need more time
+
+        # Send all RCON responses back to the Discord channel
+        if self.rcon_responses:
+            for response in self.rcon_responses:
+                await ctx.send(f"RCON Response: {response}")
+        else:
+            await ctx.send("No response received from the server.")
+
 async def setup(bot):
-    await bot.add_cog(WelcomeCog(bot))
-    print("Welcome Cog Loaded")
+    await bot.add_cog(RconCog(bot))
+    print("Rcon Cog Loaded")
