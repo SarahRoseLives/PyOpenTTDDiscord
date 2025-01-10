@@ -23,6 +23,8 @@ class ChatCog(commands.Cog):
         # Get the channel ID from the config file
         self.channel_id = int(config.get("BOT", "chat_channel_id"))
 
+        self.bot_name = config.get("BOT", "bot_name")
+
         self.ip_address = config.get("OPENTTD", "ip_address")
         self.port_number = int(config.get("OPENTTD", "port_number"))
         self.password = config.get("OPENTTD", "password")
@@ -31,7 +33,7 @@ class ChatCog(commands.Cog):
 
         # Create an admin instance to communicate with OpenTTD
         self.admin = Admin(ip=self.ip_address, port=self.port_number)
-        self.admin.login("pyOpenTTDAdmin", self.password)
+        self.admin.login(self.bot_name, self.password)
 
         # Start the thread to handle OpenTTD console messages
         self.admin_thread = threading.Thread(target=self.run_openttd_admin, daemon=True)

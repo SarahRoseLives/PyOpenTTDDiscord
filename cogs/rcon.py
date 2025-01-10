@@ -23,6 +23,7 @@ class RconCog(commands.Cog):
         config.read(config_path)  # Ensure the config.ini is in the correct directory
 
         self.admin_role_id = config.get("BOT", "admin_role_id")
+        self.bot_name = config.get("BOT", "bot_name")
 
 
         # Get the welcome message from the config file
@@ -33,7 +34,7 @@ class RconCog(commands.Cog):
 
         # Create an admin instance to communicate with OpenTTD
         self.admin = Admin(ip=self.ip_address, port=self.port_number)
-        self.admin.login("pyOpenTTDAdmin", self.password)
+        self.admin.login(self.bot_name, self.password)
 
         # Start the thread to handle OpenTTD console messages
         self.admin_thread = threading.Thread(target=self.run_openttd_admin, daemon=True)
