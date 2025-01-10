@@ -22,6 +22,9 @@ class RconCog(commands.Cog):
         config = configparser.ConfigParser()
         config.read(config_path)  # Ensure the config.ini is in the correct directory
 
+        self.admin_role_id = config.get("BOT", "admin_role_id")
+
+
         # Get the welcome message from the config file
         self.welcome_message = config.get("OPENTTD", "welcome_message")
         self.ip_address = config.get("OPENTTD", "ip_address")
@@ -52,6 +55,11 @@ class RconCog(commands.Cog):
     @commands.command()
     async def rcon(self, ctx, *, command: str):
         """Send an RCON command to OpenTTD and respond with the output."""
+        # Check if the user has the admin role
+        if not any(role.id == int(self.admin_role_id) for role in ctx.author.roles):
+            await ctx.send("You do not have permission to use this command.")
+            return
+
         # Clear the previous responses before sending a new command
         self.rcon_responses.clear()
 
@@ -67,6 +75,7 @@ class RconCog(commands.Cog):
                 await ctx.send(f"RCON Response: {response}")
         else:
             await ctx.send("No response received from the server.")
+
 
 async def setup(bot):
     await bot.add_cog(RconCog(bot))
