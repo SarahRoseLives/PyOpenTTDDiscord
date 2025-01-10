@@ -48,7 +48,7 @@ class RconCog(commands.Cog):
         @self.admin.add_handler(openttdpacket.RconPacket)
         def RconPacket(admin: Admin, packet: openttdpacket.RconPacket):
             # Append each RconPacket's message to the list
-            self.rcon_responses.append(str(packet))  # Or use specific attributes like packet.data if needed
+            self.rcon_responses.append(str(packet.response))  # Or use specific attributes like packet.data if needed
 
         # Run admin to keep connection active
         self.admin.run()
