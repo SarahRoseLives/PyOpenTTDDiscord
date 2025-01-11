@@ -11,12 +11,21 @@ config_file = os.path.join(current_directory, 'config.ini')
 # Create a config file if it doesn't exist
 def create_config_file():
     config = configparser.ConfigParser()
+
+    # Add the BOT section with empty values
     config['BOT'] = {
-        'discord_secret': 'YOUR_DISCORD_SECRET_TOKEN_HERE',
-        'chat_channel_id': 'YOUR_CHAT_CHANNEL_ID_HERE',
+        'discord_secret': '',
+        'chat_channel_id': '',
+        'admin_role_id': '',
+        'bot_name': ''
     }
+
+    # Add the OPENTTD section with empty values
     config['OPENTTD'] = {
-        'welcome_message': 'This is your welcome message.'
+        'welcome_message': '',
+        'port_number': '',
+        'ip_address': '',
+        'password': ''
     }
     with open(config_file, 'w') as f:
         config.write(f)
