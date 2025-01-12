@@ -22,6 +22,7 @@ class ChatCog(commands.Cog):
 
         # Get the channel ID from the config file
         self.channel_id = int(config.get("BOT", "chat_channel_id"))
+        self.admin_role_id = config.get("BOT", "admin_role_id")
 
         self.bot_name = config.get("BOT", "bot_name")
 
@@ -48,8 +49,15 @@ class ChatCog(commands.Cog):
         def console_packet(admin: Admin, packet: openttdpacket.ConsolePacket):
             message = packet.message
 
+            # Notify admin role of a report
+            if "!report" in message:
+
+                channel = self.bot.get_channel(self.channel_id)
+                # Send the message with the role mention
+                asyncio.run_coroutine_threadsafe(channel.send(f"<@&{self.admin_role_id}> {message}"), self.bot.loop)
+
             # Forward messages starting with "[All] " (normal chat)
-            if "[All]" in message and "Discord: " not in message:
+            elif "[All]" in message and "Discord: " not in message:
                 cleaned_message = message.replace("[All] ", "").strip()
                 channel = self.bot.get_channel(self.channel_id)
                 if channel is not None:
